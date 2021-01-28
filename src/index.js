@@ -1,15 +1,15 @@
-// import React, {Component} from 'react';
-import * as React from 'react';
+import React, {Component} from 'react';
+// import * as React from 'react';
 
-import { Alert, Button, Platform, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import  MqttManager  from './realtimeManager';
 
-const instructions = Platform.select({
-  ios: 'Press Cmd+R to reload,\n' + 'Cmd+D or shake for dev menu',
-  android:
-    'Double tap R on your keyboard to reload,\n' +
-    'Shake or press menu button for dev menu',
-});
+// const instructions = Platform.select({
+//   ios: 'Press Cmd+R to reload,\n' + 'Cmd+D or shake for dev menu',
+//   android:
+//     'Double tap R on your keyboard to reload,\n' +
+//     'Shake or press menu button for dev menu',
+// });
 
 // init realtime
 MqttManager.create(
@@ -43,13 +43,9 @@ MqttManager.publisher(
 
 
 
-type Props = {};
+class MqttPubMessage extends Component {
 
-
-export default class App extends React.Component<Props> {
-// class App extends React.Component <Props, State> {
-  props: Props;
-
+  // Set State constructor with initial values
   constructor (constructorProps) {
     super(constructorProps)
     this.state = {
@@ -58,31 +54,57 @@ export default class App extends React.Component<Props> {
     }
   }
 
+  // Handle this.state properties in the correct way
+  // When handleChangeInput function is called, then the value of 
+  // onChangeText property is passed here over text and this parameter 
+  // could be passed to this.state.mqtt_pub_message_state
   handleChangeInput = (text) => {
-    this.setState({ mqtt_pub_message_state: text })
+    this.setState({ mqtt_pub_message_state: text });
   }
 
   render() {
-          // console.log(` Props: ${JSON.stringify(this.props)}`);
     const { mqtt_pub_message_state } = this.state
     console.log(`mqtt_pub_message_state: ${mqtt_pub_message_state}`);
 
     return (
-
-      <View style={styles.container}>
+      <>
         <TextInput
-          style={{ height: 40, width: 200, borderColor: 'gray', borderWidth: 1 }}
-          onChangeText={this.handleChangeInput}
-          value={mqtt_pub_message_state}
+            style={ styles.pubMessageTextInput }
+            onChangeText={ this.handleChangeInput }
         />
-        {/* <Text style={styles.welcome}>Welcome to React Native!</Text> */}
-        {/* <Text style={styles.instructions}>To get started, edit App.js</Text> */}
-        <Text style={styles.instructions}>A: {MqttManager.data_payload.data}</Text>
-        <Button
-          title="Press me"
-          color="#004686"
+        <TouchableOpacity
+          style={ styles.pubMessageTextButtonStyle }
+          underlayColor='#F5FCFF'
           onPress={() => MqttManager.onPublish()}
-        />
+          >
+          <Text style={ styles.pubMessageTextButtonText }>MQTT PUBLISH</Text>
+        </TouchableOpacity>
+      </>
+    );
+  }
+}
+
+class MqttSubMessage extends Component {
+  render(){
+    return (
+      <>
+        <Text style={ styles.subMessageTextInput }>Mqtt Sub payload: { MqttManager.data_payload.data }</Text>
+      </>
+    );
+  }
+}
+
+// type Props = {};
+
+// export default class App extends React.Component<Props> {
+export default class App extends Component {
+// class App extends React.Component <Props, State> {
+  // props: Props;
+  render() {
+    return (
+      <View style={ styles.container }>
+        <MqttSubMessage  />
+        <MqttPubMessage  />
       </View>
     );
   }
@@ -97,14 +119,28 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#F5FCFF',
   },
-  welcome: {
-    fontSize: 20,
-    textAlign: 'center',
-    margin: 10,
+
+  pubMessageTextInput: { 
+    height: 40,
+    width: 300,
+    borderColor: 'gray',
+    borderWidth: 1
   },
-  instructions: {
-    textAlign: 'center',
-    color: '#333333',
-    marginBottom: 5,
+
+  pubMessageTextButtonStyle: {
+    alignItems: "center",
+    backgroundColor: "#004686",
+    padding: 10,
+    width: 300,
   },
+
+  pubMessageTextButtonText: {
+    color: 'white',
+  },
+
+  subMessageTextInput: { 
+    height: 40,
+    width: 300,
+  },
+
 });
