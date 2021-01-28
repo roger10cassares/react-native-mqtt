@@ -2,12 +2,15 @@
 
 Module created for React Native to include Maps in the App (IOS/Android). This is a **Native MQTT Client Module**
 
-# 1. Initialize a new React-Native Project
+# 1. React-Native Project
+
+- Create a new Project from the beggining (1.1-1.2)
+- Clone this repository (1.3)
 
 ## 1.1. Create a new React-Native Project
 
 ```bash
-export REACT_NATIVE_PROJECTS_PATH=$HOME/RCP/RCP-Linux/React-Native/
+export REACT_NATIVE_PROJECTS_PATH=$HOME/React-Native/
 cd $REACT_NATIVE_PROJECTS_PATH
 
 # Init a new React-Native Project
@@ -53,7 +56,18 @@ export default function App() {
 }
 ```
 
-## 1.3. Launch Android Specific Emulator (optional)
+## 1.3. Clone this repository and install dependencies
+
+From a terminal with `git cli` installed
+
+```bash
+cd $HOME
+git clone `https://github.com/roger10cassares/react-native-mqtt.git
+mkdir -p $HOME/React-Native`
+cd $HOME/React-Native`
+yarn
+
+## 1.4. Launch Android Specific Emulator (optional)
 
 Launch the `Android Emulator` installed from `android-studio`
 
@@ -103,7 +117,7 @@ This list above shows the a device named `emulator-5554` is attached to the `adb
 
 
 
-## 1.4. Start the React-Native Project App
+## 1.5. Start the React-Native Project App
 
 - Open the terminal inside the `Visual Code IDE` typing `Ctrl + ` `
 
@@ -141,10 +155,8 @@ cd $REACT_NATIVE_PROJECTS_PATH/maps
 
 yarn add sp-react-native-mqtt
 yarn add underscore
-#yarn add react-native-device-info
 yarn add date-fns
 yarn add date-fns-tz
-# yarn add intl
 ```
 
 ## 2.2. Check App Permissions in AndroidManifest.xml file
@@ -155,193 +167,289 @@ yarn add date-fns-tz
 <uses-permission android:name="android.permission.INTERNET" />
 ```
 
-## 2.3. Specify Google Maps API Key
-
-- For React-Native 0.6+, specify your Google Maps API Key:
-
-  Add your API key to your manifest file (./`android/app/src/main/AndroidManifest.xml`):
-
-```xml
-<application>
-   <!-- You will only need to add this meta-data tag, but make sure it's a child of application -->
-   <meta-data
-     android:name="com.google.android.geo.API_KEY"
-     android:value="Your Google maps API Key Here"/>
-  
-   <!-- You will also only need to add this uses-library tag -->
-   <uses-library android:name="org.apache.http.legacy" android:required="false"/>
-</application>
-```
-
-> *Note: As shown above, `com.google.android.geo.API_KEY` is the recommended metadata name for the API key. A key with this name can be used to authenticate to multiple Google Maps-based APIs on the Android platform, including the Google Maps Android API. For backwards compatibility, the API also supports the name `com.google.android.maps.v2.API_KEY`. This legacy name allows authentication to the Android Maps API v2 only. An application can specify only one of the API key metadata names. If both are specified, the API throws an exception.*
->
-> *Source: https://developers.google.com/maps/documentation/android-api/signup*
-
-## 2.4. Write the Main Code
+## 2.3. Write the Main Code
 
 Finally, in `./src/index.js`, write the main code:
 
 ```js
-import React, { Component } from 'react';
-import { ScrollView, Text, View, StyleSheet, Dimensions } from 'react-native';
+import React, {Component} from 'react';
+// import * as React from 'react';
 
-import MapView from 'react-native-maps';
+import { Alert, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import  MqttManager  from './realtimeManager';
 
-const { height, width } = Dimensions.get('window');
+// const instructions = Platform.select({
+//   ios: 'Press Cmd+R to reload,\n' + 'Cmd+D or shake for dev menu',
+//   android:
+//     'Double tap R on your keyboard to reload,\n' +
+//     'Shake or press menu button for dev menu',
+// });
+
+// init realtime
+MqttManager.create(
+  {
+    uri: 'mqtt://smartcampus.maua.br:1883',
+    topic: `smartcampus/app`,
+    auth: true,
+    user: 'PUBLIC',
+    pass: 'public',
+    clean: true,
+  },
+);
+
+MqttManager.subscriber(
+  {
+    topic: `smartcampus/app`,
+    qos: 0,
+  },
+);
 
 
-class App extends Component {
+MqttManager.publisher(
+  {
+    topic: `smartcampus/app`, 
+    payload: `Message App`, 
+    qos: 0, 
+    retain: false,
+  }
+);
 
-  state = {
-    places: [
-      {
-        id: 1,
-        title: 'IMT',
-        description: 'Instituto Maua de Tecnologia',
-        latitude: -23.648009025453263, 
-        longitude: -46.574244995456134,
-      },
-      {
-        id: 2,
-        title: 'Daimon',
-        description: 'Daimon, especialistas em energia',
-        latitude: -23.55986282115463, 
-        longitude: -46.65701059902382
-      },
-      {
-        id: 3,
-        title: 'AVL',
-        description: 'AVL South America',
-        latitude: -23.47134054444347,
-        longitude: -46.45401782636043
-      }
-    ],
-  };
 
-  _mapReady = () => {
-    this.state.places[0].mark.showCallout();
-  };
 
+
+class MqttPubMessage extends Component {
+
+  // Set State constructor with initial values
+  constructor (constructorProps) {
+    super(constructorProps)
+    this.state = {
+      mqtt_pub_message_state: '',
+      mqtt_sub_message_state: ''
+    }
+  }
+
+  // Handle this.state properties in the correct way
+  // When handleChangeInput function is called, then the value of 
+  // onChangeText property is passed here over text and this parameter 
+  // could be passed to this.state.mqtt_pub_message_state
+  handleChangeInput = (text) => {
+    this.setState({ mqtt_pub_message_state: text });
+  }
 
   render() {
-
-    // Set to latitude and longitude the values from state.places[]
-    const { latitude, longitude } = this.state.places[0];
+    const { mqtt_pub_message_state } = this.state
+    console.log(`mqtt_pub_message_state: ${mqtt_pub_message_state}`);
 
     return (
-      <View style={styles.container}>
-        <MapView 
-          ref={map => this.mapView = map}
-          initialRegion={{
-            latitude,
-            longitude,
-            latitudeDelta: 0.0142,
-            longitudeDelta: 0.0231,
-          }} 
-          style={styles.mapView}
-          rotateEnabled={false}
-          scrollEnabled={false}
-          zoomEnabled={false}
-          showsPointsOfInterest={false}
-          showsBuildings={false}
-          onMapReady={this._mapReady}
+      <>
+        <TextInput
+            style={ styles.pubMessageTextInput }
+            onChangeText={ this.handleChangeInput }
+        />
+        <TouchableOpacity
+          style={ styles.pubMessageTextButtonStyle }
+          underlayColor='#F5FCFF'
+          onPress={() => MqttManager.onPublish()}
           >
-          { this.state.places.map(place => (
-            <MapView.Marker
-            ref={mark => place.mark = mark}
-            title={place.title}
-            description={place.description}
-            key={place.id}
-              coordinate={{
-                latitude: place.latitude,
-                longitude: place.longitude,
-              }}
-            />
-          )) }
-        </MapView>
-        <ScrollView
-          style={styles.placesContainer}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          pagingEnabled
-          onMomentumScrollEnd={e => {
-            const scrolled = e.nativeEvent.contentOffset.x;
+          <Text style={ styles.pubMessageTextButtonText }>MQTT PUBLISH</Text>
+        </TouchableOpacity>
+      </>
+    );
+  }
+}
 
-            const place = (scrolled > 0)
-              ? parseInt((scrolled / Dimensions.get('window').width) + 1)
-              : 0;
-            
-            const { latitude, longitude, mark } = this.state.places[place];
+class MqttSubMessage extends Component {
+  render(){
+    return (
+      <>
+        <Text style={ styles.subMessageTextInput }>Mqtt Sub payload: { MqttManager.data_payload.data }</Text>
+      </>
+    );
+  }
+}
 
-            this.mapView.animateCamera({
-                center: {
-                  latitude,
-                  longitude,
-                },
-                pitch: 2,
-                heading: 10,
-              }, 
-              { 
-                duration: 1000 
-              }
-            );
+// type Props = {};
 
-            setTimeout(() => {
-              mark.showCallout();
-            }, 1000);
-
-          }}
-          >
-          { this.state.places.map(place => (
-            <View key={place.id} style={styles.place}>
-              <Text>{place.title}</Text>
-              <Text>{place.description}</Text>
-            </View>
-          ))}
-        </ScrollView>
+// export default class App extends React.Component<Props> {
+export default class App extends Component {
+// class App extends React.Component <Props, State> {
+  // props: Props;
+  render() {
+    return (
+      <View style={ styles.container }>
+        <MqttSubMessage  />
+        <MqttPubMessage  />
       </View>
-
-      
     );
   }
 }
 
 
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'flex-end',
-    alignItems: 'flex-end',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F5FCFF',
   },
 
-  mapView: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    bottom: 0,
-    right: 0,
+  pubMessageTextInput: { 
+    height: 40,
+    width: 300,
+    borderColor: 'gray',
+    borderWidth: 1
   },
 
-  placesContainer: {
-    width: '100%',
-    maxHeight: 200,
+  pubMessageTextButtonStyle: {
+    alignItems: "center",
+    backgroundColor: "#004686",
+    padding: 10,
+    width: 300,
   },
 
-  place: {
-    width: width -40,
-    maxHeight: 200,
-    backgroundColor: '#FFF',
-    marginHorizontal: 20,
+  pubMessageTextButtonText: {
+    color: 'white',
+  },
 
-  }
+  subMessageTextInput: { 
+    height: 40,
+    width: 300,
+  },
 
-})
-
-
-export default App;
+});
 ```
 
+In `./src/realtimeManager.js`. write 
 
+```js
+import MQTT from 'sp-react-native-mqtt';
+import _ from 'underscore';
+
+// import DeviceInfo from 'react-native-device-info';
+import { addHours, isAfter, isBefore, formatDistance, format, formatRelative, parseISO, subDays  } from 'date-fns'
+import { zonedTimeToUtc } from 'date-fns-tz';
+
+
+// import pt from '../node_modules/date-fns/locale/pt-BR';
+
+
+var timestamp = Number(new Date());
+var znDate = format(
+                      new Date(),
+                      'dd/MM/yyyy HH:mm',
+                      {
+                        timeZone: 'America/Sao_Paulo',
+                      }
+                    );
+
+module.exports = {
+  
+  props: null,
+ 
+  randIdCreator() {
+    const S4 = () => (((1+Math.random())*0x10000)|0).toString(16).substring(1);
+    return `${S4()}${S4()}${S4()}${S4()}${S4()}${S4()}${S4()}${S4()}`;
+  },
+
+  subscriber(subscriberProps = {}) {
+    if (subscriberProps) {
+      this.subProps = subscriberProps;
+    }
+  },
+
+  publisher(publisherProps = {}) {
+    if (publisherProps) {
+      this.pubProps = publisherProps;
+    }
+  },
+
+  create(connectionProps = {}) {
+    if (connectionProps) {
+      this.onConnectionOpened = this.onConnectionOpened.bind(this);
+      this.onConnectionClosed = this.onConnectionClosed.bind(this);
+      this.onError = this.onError.bind(this);
+      this.onMessageArrived = this.onMessageArrived.bind(this);
+      this.disconnect = this.disconnect.bind(this);
+
+      const clientId = this.randIdCreator()
+        .replace(/[^a-zA-Z0-9]+/g, '');
+
+      this.conProps = _.extend({
+        clientId: `clientId-${clientId}`,
+        timestamp: timestamp,
+        znDate: znDate,
+      }, connectionProps);
+
+
+      this.data_payload = {};
+
+
+      /* create mqtt client */
+      MQTT.createClient(this.conProps)
+        .then((client) => {
+          this.client = client;
+          client.on('closed', this.onConnectionClosed);
+          client.on('error', this.onError);
+          client.on('message', this.onMessageArrived);
+          client.on('connect', this.onConnectionOpened); // Subscribe
+
+
+          client.connect();
+
+        }).catch((err) => {
+          console.error(`MQTT.createClient error: ${err}`);
+        });
+    }
+  },
+
+  disconnect() {
+    if (this.client) {
+      console.log('Now killing open realtime connection.');
+      this.client.disconnect();
+    }
+  },
+
+  onError(error) {
+    console.error(`MQTT onError: ${error}`);
+  },
+
+  onConnectionOpened() {
+    // subscribe to the client topic
+    this.client.subscribe(this.conProps.topic, this.subProps.qos);
+    console.log('MQTT onConnectionOpened');
+  },
+
+  onConnectionClosed(err) {
+    console.log(`MQTT onConnectionClosed ${err}`);
+  },
+
+  onMessageArrived(message) {
+    if (message) {
+      console.log(`MQTT New message: ${JSON.stringify(message)}`);
+      console.log(`data_payload before receiveing message: ${JSON.stringify(this.data_payload)}`)
+      this.data_payload = message;
+      console.log(`data_payload after receiveing message: ${JSON.stringify(this.data_payload)}`)
+
+    }
+  },
+
+  onPublish(topic, payload, qos, retain) {
+    this.client.publish(
+      this.pubProps.topic,
+      this.pubProps.payload,
+      this.pubProps.qos,
+      this.pubProps.retain
+      );
+  },
+
+
+
+
+};
+
+
+```
 
 When the code above is saved, the `App` shall be modified according to this file. 
 
@@ -368,10 +476,10 @@ From: https://reactnative.dev/docs/signed-apk-android
 ### 2.6.1.  Generating an upload key
 
 ```bash
-export REACT_NATIVE_PROJECTS_PATH=$HOME/RCP/RCP-Linux/React-Native/
+export REACT_NATIVE_PROJECTS_PATH=$HOME/React-Native/
 cd $REACT_NATIVE_PROJECTS_PATH
 
-cd maps
+cd mqtt
 
 keytool -genkeypair -v -keystore my-upload-key.keystore -alias my-key-alias -keyalg RSA -keysize 2048 -validity 10000
 ```
@@ -430,7 +538,7 @@ android {
 Run the following in any  Terminal:
 
 ```bash
-export REACT_NATIVE_PROJECTS_PATH=$HOME/RCP/RCP-Linux/React-Native/
+export REACT_NATIVE_PROJECTS_PATH=$HOME/React-Native/
 cd $REACT_NATIVE_PROJECTS_PATH
 
 cd maps/android
@@ -442,10 +550,10 @@ cd maps/android
 ### 2.6.5. Testing the release build of the App
 
 ```bash
-export REACT_NATIVE_PROJECTS_PATH=$HOME/RCP/RCP-Linux/React-Native/
+export REACT_NATIVE_PROJECTS_PATH=$HOME/React-Native/
 cd $REACT_NATIVE_PROJECTS_PATH
 
-cd maps
+cd mqtt
 yarn react-native run-android --variant=release
 ```
 
@@ -456,7 +564,7 @@ yarn react-native run-android --variant=release
 The generated `APK` file for the release from the App shall be located at:
 
 ````bash
-/home/roger/RCP/RCP-Linux/React-Native/maps/android/app/build/outputs/apk/release/app-release.apk
+$HOME/React-Native/React-Native/maps/android/app/build/outputs/apk/release/app-release.apk
 ````
 
 
