@@ -66,13 +66,13 @@ git clone `https://github.com/roger10cassares/react-native-mqtt.git
 mkdir -p $HOME/React-Native`
 cd $HOME/React-Native`
 yarn
+```
 
 ## 1.4. Launch Android Specific Emulator (optional)
 
 Launch the `Android Emulator` installed from `android-studio`
 
 - With the `android-studio` and `Android SDK` correctly installed, launch from an external `Terminal` from anywhere ant type the following command line to start `android-studio`:`
-
 
 ```bash
 studio.sh
